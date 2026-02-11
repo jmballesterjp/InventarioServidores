@@ -51,7 +51,7 @@ function Update-ServerInventory {
             Write-InventoryLog -Message "Iniciando actualización de inventario" -ServerName $server -Level Info
             
             # Verificar si ya existe y está actualizado
-            $existingPath = Join-Path $script:DataPath "Inventory" "$server.var.xml"
+            $existingPath = Join-Path $script:DataPath "Inventory/$server.var.xml" #TODO: no existe datapath?
             if ((Test-Path $existingPath) -and -not $Force) {
                 try {
                     $existing = Import-ServerInventory -ServerName $server

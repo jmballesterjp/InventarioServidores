@@ -40,7 +40,7 @@ function Get-ServerInventory {
     
     process {
         foreach ($server in $ServerName) {
-            $inventory = Import-ServerInventory -ServerName $server
+            [ServerInventory]$inventory = Import-ServerInventory -ServerName $server
             
             if ($null -eq $inventory) {
                 Write-Warning "No se encontró inventario para: $server"
@@ -53,7 +53,7 @@ function Get-ServerInventory {
                 continue
             }
             
-            Write-Output $inventory
+            return $inventory
         }
     }
 }

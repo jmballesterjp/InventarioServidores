@@ -16,6 +16,15 @@
     # Módulo root
     RootModule = 'InventarioServidores.psm1'
     
+    ScriptsToProcess = @(
+        'Source/Classes/CollectionStatus.ps1'
+        'Source/Classes/OSInfo.ps1'
+        'Source/Classes/HardwareInfo.ps1'
+        'Source/Classes/NetworkInfo.ps1'
+        'Source/Classes/IISInfo.ps1'
+        'Source/Classes/ServerInventory.ps1'
+    )
+    
     # Funciones a exportar
     FunctionsToExport = @(
         'Get-ServerInventory'

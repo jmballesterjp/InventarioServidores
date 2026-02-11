@@ -42,7 +42,7 @@ function Export-ServerInventory {
     process {
         # Path por defecto
         if (-not $Path) {
-            $Path = Join-Path $script:DataPath "Inventory" "$($Inventory.ServerName).var.xml"
+            $Path = Join-Path $script:DataPath "Inventory/$($Inventory.ServerName).var.xml" #TODO: Fix them all
         }
         
         $directory = Split-Path $Path -Parent

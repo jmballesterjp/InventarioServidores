@@ -11,6 +11,7 @@ $script:TempPath = Join-Path $ModuleRoot "Temp"
 $script:ConfigPath = Join-Path $ModuleRoot "Config"
 
 # === Cargar Clases (ORDEN IMPORTANTE) ===
+<#
 $classFiles = @(
     'CollectionStatus.ps1'
     'OSInfo.ps1'
@@ -23,13 +24,15 @@ $classFiles = @(
 foreach ($classFile in $classFiles) {
     $classPath = Join-Path $ModuleRoot "Source\Classes\$classFile"
     if (Test-Path $classPath) {
-        . $classPath
+        $classContent = Get-ChildItem "$classPath" | Get-Content -Raw
+        Invoke-Expression $classContent
         Write-Verbose "Clase cargada: $classFile"
     }
     else {
         Write-Warning "No se encontró clase: $classFile"
     }
 }
+#>
 
 # === Cargar Funciones Private ===
 $privateFunctions = Get-ChildItem -Path (Join-Path $ModuleRoot "Source\Private\*.ps1") -ErrorAction SilentlyContinue

@@ -1,20 +1,27 @@
-﻿# 01-BasicUsage.ps1
+﻿using module ..\..\InventarioServidores.psd1 #(Join-Path $ScriptRoot "..\..\InventarioServidores.psd1")
+
+# 01-BasicUsage.ps1
 # Ejemplos básicos de uso del módulo
 
 # Importar módulo
 # $PSScriptRoot
 # $ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ScriptRoot = $PSScriptRoot
-Import-Module (Join-Path $ScriptRoot "..\..\InventarioServidores.psm1") -Force
-#Import-Module ..\..\InventarioServidores.psm1 -Force
+# Importar módulo #Reemplazado por using module para evitar problemas de ClassNotFound
+# Import-Module (Join-Path $ScriptRoot "..\..\InventarioServidores.psm1") -Force
+
+#Servidor por defecto
+if ($null -eq $serverToInventory) {
+    $serverToInventory="localhost"
+}
 
 # === EJEMPLO 1: Inventariar un servidor ===
 Write-Host "`n=== EJEMPLO 1: Inventario básico ===" -ForegroundColor Cyan
-Update-ServerInventory -ServerName "localhost" -Force -PassThru
+Update-ServerInventory -ServerName $serverToInventory -Force -PassThru
 
 # === EJEMPLO 2: Consultar inventario ===
 Write-Host "`n=== EJEMPLO 2: Consultar inventario ===" -ForegroundColor Cyan
-$inv = Get-ServerInventory -ServerName "localhost"
+$inv = Get-ServerInventory -ServerName $serverToInventory
 Write-Host "Servidor: $($inv.ServerName)"
 Write-Host "OS: $($inv.OS.Name)"
 Write-Host "RAM: $($inv.Hardware.GetRAMFormatted())"

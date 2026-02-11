@@ -46,7 +46,7 @@ function Import-ServerInventory {
     
     # Resolver path
     if ($PSCmdlet.ParameterSetName -eq 'ByServerName') {
-        $Path = Join-Path $script:DataPath "Inventory" "$ServerName.var.xml"
+        $Path = Join-Path $script:DataPath "Inventory/$ServerName.var.xml"
         
         if (-not (Test-Path $Path)) {
             Write-Error "No existe inventario para el servidor '$ServerName' en: $Path"
@@ -58,7 +58,13 @@ function Import-ServerInventory {
     
     try {
         # Importar XML
-        $inventory = Import-Clixml -Path $Path -ErrorAction Stop
+        # [ServerInventory]$inventory = Import-Clixml -Path $Path -ErrorAction Stop
+
+        # Importar el objeto deserializado
+        $deserializado = Import-CliXml -Path $Path -ErrorAction Stop
+        # Rehidratar a objeto con métodos
+        $inventory = [ServerInventory]::FromCliXml($deserializado)
+
         
         # Validar schema básico
         if (-not (Test-ServerInventorySchema -Inventory $inventory -Strict:$Strict)) {
