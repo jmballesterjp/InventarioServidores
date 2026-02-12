@@ -56,6 +56,7 @@ catch {
 $controlNames = @(
     'btnRefresh',
     'btnUpdateSelected',
+    'btnViewDetails',
     'btnUpdateAll',
     'btnSearch',
     'txtSearch',
@@ -324,6 +325,84 @@ function Search-Servers {
     }
 }
 
+# === FUNCIÓN: FORMATEAR INVENTARIO A TEXTO ===
+function Format-InventoryAsText {
+    param(
+        [Parameter(Mandatory=$true)]
+        [object]$Inventory
+    )
+
+    try {
+        $json = $Inventory | ConvertTo-Json -Depth 10
+    }
+    catch {
+        $json = $Inventory.ToString()
+    }
+
+    $header = "Servidor: $($Inventory.ServerName)`nFecha: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')`n`n"
+    return $header + $json
+}
+
+# === FUNCIÓN: MOSTRAR DETALLES DE UN SERVIDOR ===
+function Show-ServerDetails {
+    [CmdletBinding()]
+    param()
+
+    $selectedItem = $controls['dgServers'].SelectedItem
+    if ($null -eq $selectedItem) {
+        [System.Windows.MessageBox]::Show(
+            "Por favor, selecciona un servidor de la lista.",
+            "Sin selección",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Warning
+        )
+        return
+    }
+
+    # Obtener inventario original si existe
+    try {
+        $inventory = $null
+        if ($selectedItem -is [object] -and $selectedItem.PSObject.Methods.Name -contains 'GetInventory') {
+            $inventory = $selectedItem.GetInventory()
+        }
+        else {
+            $inventory = $selectedItem
+        }
+    }
+    catch {
+        $inventory = $selectedItem
+    }
+
+    $detailsXaml = Join-Path $scriptPath "Views\ServerDetailsWindow.xaml"
+
+    try {
+        $detailsWindow = Load-XamlWindow -XamlPath $detailsXaml
+        $detailControls = Get-AllXamlControls -Window $detailsWindow -ControlNames @('txtDetails','btnClose')
+
+        $detailText = Format-InventoryAsText -Inventory $inventory
+        if ($detailControls.ContainsKey('txtDetails')) {
+            $detailControls['txtDetails'].Text = $detailText
+        }
+
+        if ($detailControls.ContainsKey('btnClose')) {
+            $detailControls['btnClose'].Add_Click({ $detailsWindow.Close() })
+        }
+
+        $detailsWindow.Title = "Detalles - $($inventory.ServerName)"
+        [void]$detailsWindow.ShowDialog()
+    }
+    catch {
+        $err = "No se pudo abrir la ventana de detalles: $($_.Exception.Message)"
+        Write-Error $err
+        [System.Windows.MessageBox]::Show(
+            $err,
+            "Error",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Error
+        )
+    }
+}
+
 # === EVENTOS DE CONTROLES ===
 
 # Botón Refrescar
@@ -358,6 +437,25 @@ $controls['txtSearch'].Add_KeyDown({
 $controls['dgServers'].Add_SelectionChanged({
     $isSelected = $null -ne $controls['dgServers'].SelectedItem
     $controls['btnUpdateSelected'].IsEnabled = $isSelected
+    # Habilitar botón Ver detalles cuando haya selección
+    if ($controls.ContainsKey('btnViewDetails')) {
+        $controls['btnViewDetails'].IsEnabled = $isSelected
+    }
+})
+
+# Botón Ver detalles
+if ($controls.ContainsKey('btnViewDetails')) {
+    $controls['btnViewDetails'].Add_Click({
+        Show-ServerDetails
+    })
+}
+
+# DataGrid - doble click en fila -> ver detalles
+$controls['dgServers'].Add_MouseDoubleClick({
+    $sel = $controls['dgServers'].SelectedItem
+    if ($null -ne $sel) {
+        Show-ServerDetails
+    }
 })
 
 # Evento al cerrar ventana

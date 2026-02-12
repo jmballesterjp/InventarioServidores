@@ -13,7 +13,7 @@
         <Style x:Key="HeaderTextStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="Foreground" Value="#b3b3b3"/>
             <Setter Property="Margin" Value="0,0,0,10"/>
         </Style>
         
@@ -40,6 +40,10 @@
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#1976D2"/>
                 </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#b3b3b3"/>
+                    <Setter Property="Foreground" Value="#808080"/>
+                </Trigger>
             </Style.Triggers>
         </Style>
         
@@ -48,6 +52,10 @@
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#388E3C"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#b3b3b3"/>
+                    <Setter Property="Foreground" Value="#808080"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -82,11 +90,17 @@
                     Style="{StaticResource SecondaryButtonStyle}"
                     Margin="0,0,10,0"
                     IsEnabled="False"/>
-            
+
             <Button Name="btnUpdateAll" 
                     Content="🔄 Actualizar Todos" 
                     Style="{StaticResource SecondaryButtonStyle}"
                     Margin="0,0,10,0"/>
+
+            <Button Name="btnViewDetails"
+                Content="👁️ Ver detalles"
+                Style="{StaticResource PrimaryButtonStyle}"
+                Margin="0,0,10,0"
+                IsEnabled="False"/>
             
             <Separator Width="1" Margin="10,0" Background="#DDDDDD"/>
             
