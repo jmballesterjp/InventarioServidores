@@ -516,31 +516,23 @@ function Add-NewServer {
         # Crear nuevo ServerInventory
         try {
             Update-StatusBar -Message "Creando nuevo inventario para '$serverName'..." -ShowTime:$false
-            
+
             # Crear la instancia de ServerInventory
             $newInventory = [ServerInventory]::new($serverName)
-            
-            # Obtener todos los inventarios actuales
-            $allInventories = Get-AllServerInventories -IncludeStale
-            
-            # Convertir a lista si es necesario
-            if ($null -eq $allInventories) {
-                $allInventories = @($newInventory)
-            }
-            elseif ($allInventories -isnot [System.Collections.IList]) {
-                $allInventories = @($allInventories)
-            }
-            else {
-                $allInventories = $allInventories + $newInventory
-            }
-            
-            # Actualizar ViewModel
-            Update-ServersInViewModel -ViewModel $viewModel -Inventories $allInventories
-            
+
+            # Establecer el estado inicial como "Pendiente"
+            $newInventory.Status.Message = "Pendiente de inventariar"
+
+            # Guardar el inventario a disco para que persista
+            Export-ServerInventory -Inventory $newInventory -Force
+
+            # Recargar todos los inventarios desde disco
+            Load-Inventories
+
             Update-StatusBar -Message "Nuevo servidor '$serverName' agregado"
-            
+
             [System.Windows.MessageBox]::Show(
-                "Servidor '$serverName' agregado correctamente.`n`nPuedes actualizar su información usando el botón 'Actualizar Seleccionado'.",
+                "Servidor '$serverName' agregado correctamente.`n`nEstado: Pendiente de inventariar`n`nPuedes actualizar su información usando el botón 'Actualizar Seleccionado'.",
                 "Servidor agregado",
                 [System.Windows.MessageBoxButton]::OK,
                 [System.Windows.MessageBoxImage]::Information
