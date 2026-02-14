@@ -147,7 +147,9 @@ function Get-RemoteServerInventory {
         # FQDN e IP
         $inventory.FQDN = $remoteData.FQDN
         if ($remoteData.Network -and $remoteData.Network.Count -gt 0) {
-            $inventory.IPAddress = $remoteData.Network[0].IPAddress
+            # Filtrar IPs v4 automáticas (APIPA 169.x.x.x) y hacer join si hay múltiples
+            $validIPs = @($remoteData.Network | ForEach-Object { $_.IPAddress } | Where-Object { $_ -and $_ -notlike '169.*' -and $_ -notlike '*:*' })
+            $inventory.IPAddress = $validIPs -join ','
         }
         
         # OS
