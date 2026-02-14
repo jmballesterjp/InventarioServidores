@@ -60,6 +60,7 @@ $controlNames = @(
     'btnUpdateAll',
     'btnSearch',
     'btnAddServer',
+    'btnDeleteServer',
     'txtSearch',
     'dgServers',
     'txtStatus',
@@ -344,6 +345,82 @@ function Format-InventoryAsText {
     return $header + $json
 }
 
+# === FUNCIÓN: ELIMINAR SERVIDOR SELECCIONADO ===
+function Remove-SelectedServer {
+    [CmdletBinding()]
+    param()
+
+    $selectedItem = $controls['dgServers'].SelectedItem
+    
+    if ($null -eq $selectedItem) {
+        [System.Windows.MessageBox]::Show(
+            "Por favor, selecciona un servidor de la lista.",
+            "Sin selección",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Warning
+        )
+        return
+    }
+    
+    $serverName = $selectedItem.ServerName
+    
+    $result = [System.Windows.MessageBox]::Show(
+        "¿Estás seguro de que deseas eliminar el servidor '$serverName'?`n`nEsta acción no se puede deshacer.",
+        "Confirmar eliminación",
+        [System.Windows.MessageBoxButton]::YesNo,
+        [System.Windows.MessageBoxImage]::Warning
+    )
+    
+    if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
+        try {
+            Update-StatusBar -Message "Eliminando servidor '$serverName'..." -ShowTime:$false
+            
+            # Obtener la ruta del archivo del inventario
+            $dataPath = Join-Path $moduleRoot "Data\Inventory"
+            $inventoryFiles = Get-ChildItem -Path $dataPath -Recurse -Include "$serverName.var.xml","$serverName.json" -ErrorAction SilentlyContinue
+            
+            if ($inventoryFiles.Count -eq 0) {
+                Write-Warning "No se encontraron archivos para el servidor '$serverName'"
+                Update-StatusBar -Message "Error: No se encontró el archivo del servidor" -ShowTime:$false
+                return
+            }
+            
+            # Eliminar los archivos del servidor
+            foreach ($file in $inventoryFiles) {
+                Remove-Item -Path $file.FullName -Force -ErrorAction Stop
+                Write-Verbose "Archivo eliminado: $($file.Name)"
+            }
+            
+            # Remover la entrada de memoria
+            $viewModel.Servers.Remove($selectedItem) | Out-Null
+            
+            # Recargar inventarios desde disco para sincronizar
+            Load-Inventories
+            
+            Update-StatusBar -Message "Servidor '$serverName' eliminado correctamente"
+            
+            [System.Windows.MessageBox]::Show(
+                "Servidor '$serverName' eliminado correctamente.",
+                "Eliminación completada",
+                [System.Windows.MessageBoxButton]::OK,
+                [System.Windows.MessageBoxImage]::Information
+            )
+        }
+        catch {
+            $errorMsg = "Error al eliminar servidor: $($_.Exception.Message)"
+            Update-StatusBar -Message $errorMsg -ShowTime:$false
+            
+            Write-Error $errorMsg
+            [System.Windows.MessageBox]::Show(
+                $errorMsg,
+                "Error de eliminación",
+                [System.Windows.MessageBoxButton]::OK,
+                [System.Windows.MessageBoxImage]::Error
+            )
+        }
+    }
+}
+
 # === FUNCIÓN: MOSTRAR DETALLES DE UN SERVIDOR ===
 function Show-ServerDetails {
     [CmdletBinding()]
@@ -597,9 +674,12 @@ $controls['txtSearch'].Add_KeyDown({
 $controls['dgServers'].Add_SelectionChanged({
     $isSelected = $null -ne $controls['dgServers'].SelectedItem
     $controls['btnUpdateSelected'].IsEnabled = $isSelected
-    # Habilitar botón Ver detalles cuando haya selección
+    # Habilitar botones cuando haya selección
     if ($controls.ContainsKey('btnViewDetails')) {
         $controls['btnViewDetails'].IsEnabled = $isSelected
+    }
+    if ($controls.ContainsKey('btnDeleteServer')) {
+        $controls['btnDeleteServer'].IsEnabled = $isSelected
     }
 })
 
@@ -617,6 +697,13 @@ $controls['dgServers'].Add_MouseDoubleClick({
         Show-ServerDetails
     }
 })
+
+# Botón Eliminar Servidor
+if ($controls.ContainsKey('btnDeleteServer')) {
+    $controls['btnDeleteServer'].Add_Click({
+        Remove-SelectedServer
+    })
+}
 
 # Botón Agregar Nuevo Servidor
 if ($controls.ContainsKey('btnAddServer')) {

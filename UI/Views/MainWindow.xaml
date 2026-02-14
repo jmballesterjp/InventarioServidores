@@ -59,6 +59,19 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        
+        <Style x:Key="DangerButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+            <Setter Property="Background" Value="#F44336"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#DA190B"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Background" Value="#b3b3b3"/>
+                    <Setter Property="Foreground" Value="#808080"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
     
     <Grid Margin="20">
@@ -207,6 +220,12 @@
         
         <!-- BUTTON BAR -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Name="btnDeleteServer" 
+                    Content="🗑️ Eliminar seleccionado" 
+                    Style="{StaticResource DangerButtonStyle}"
+                    Margin="0,0,10,0"
+                    IsEnabled="False"/>
+            
             <Button Name="btnAddServer" 
                     Content="➕ Añadir nuevo servidor" 
                     Style="{StaticResource SecondaryButtonStyle}"
