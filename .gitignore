@@ -2,3 +2,4 @@ Data/Inventory/*.var.xml
 Data/Inventory/*.json
 Logs/*.log
 Logs/Collection/*.log
+Logs/Errors/*.log
