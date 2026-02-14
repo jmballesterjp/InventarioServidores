@@ -59,6 +59,7 @@ $controlNames = @(
     'btnViewDetails',
     'btnUpdateAll',
     'btnSearch',
+    'btnAddServer',
     'txtSearch',
     'dgServers',
     'txtStatus',
@@ -403,6 +404,173 @@ function Show-ServerDetails {
     }
 }
 
+# === FUNCIÓN: AGREGAR NUEVO SERVIDOR ===
+function Add-NewServer {
+    [CmdletBinding()]
+    param()
+
+    # Crear un diálogo de entrada para el nombre del servidor
+    $xamlInputDialog = @"
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Agregar Nuevo Servidor"
+        Height="220" 
+        Width="500"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F5F5"
+        ResizeMode="NoResize">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <TextBlock Grid.Row="0" 
+                   Text="Nombre del servidor:" 
+                   FontSize="13"
+                   Margin="0,0,0,10"
+                   Foreground="#333333"/>
+        
+        <TextBox Grid.Row="1" 
+                 Name="txtServerName" 
+                 Height="40"
+                 Padding="10"
+                 FontSize="13"
+                 Margin="0,0,0,15"/>
+        
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Name="btnOK" 
+                    Content="Aceptar" 
+                    Width="100" 
+                    Height="35"
+                    Margin="0,0,10,0"
+                    Background="#4CAF50"
+                    Foreground="White"
+                    BorderThickness="0"
+                    FontSize="12"
+                    Cursor="Hand"/>
+            <Button Name="btnCancel" 
+                    Content="Cancelar" 
+                    Width="100" 
+                    Height="35"
+                    Background="#F44336"
+                    Foreground="White"
+                    BorderThickness="0"
+                    FontSize="12"
+                    Cursor="Hand"/>
+        </StackPanel>
+    </Grid>
+</Window>
+"@
+
+    try {
+        # Cargar el diálogo
+        $inputDialog = [xml]$xamlInputDialog
+        $reader = (New-Object System.Xml.XmlNodeReader $inputDialog)
+        $dialog = [System.Windows.Markup.XamlReader]::Load($reader)
+        
+        # Obtener controles
+        $txtServerName = $dialog.FindName('txtServerName')
+        $btnOK = $dialog.FindName('btnOK')
+        $btnCancel = $dialog.FindName('btnCancel')
+        
+        # Variables para el resultado
+        $result = @{ ServerName = $null; Accepted = $false }
+        
+        # Evento del botón Aceptar
+        $btnOK.Add_Click({
+            $trimmedName = $txtServerName.Text.Trim()
+            if ([string]::IsNullOrEmpty($trimmedName)) {
+                [System.Windows.MessageBox]::Show(
+                    "Por favor, ingresa el nombre del servidor.",
+                    "Nombre vacío",
+                    [System.Windows.MessageBoxButton]::OK,
+                    [System.Windows.MessageBoxImage]::Warning
+                )
+                return
+            }
+            
+            $result['ServerName'] = $trimmedName
+            $result['Accepted'] = $true
+            $dialog.Close()
+        })
+        
+        # Evento del botón Cancelar
+        $btnCancel.Add_Click({
+            $dialog.Close()
+        })
+        
+        # Foco en el textbox
+        $txtServerName.Focus()
+        
+        # Mostrar el diálogo
+        [void]$dialog.ShowDialog()
+        
+        if (-not $result['Accepted']) {
+            return
+        }
+        
+        $serverName = $result['ServerName']
+        
+        # Crear nuevo ServerInventory
+        try {
+            Update-StatusBar -Message "Creando nuevo inventario para '$serverName'..." -ShowTime:$false
+            
+            # Crear la instancia de ServerInventory
+            $newInventory = [ServerInventory]::new($serverName)
+            
+            # Obtener todos los inventarios actuales
+            $allInventories = Get-AllServerInventories -IncludeStale
+            
+            # Convertir a lista si es necesario
+            if ($null -eq $allInventories) {
+                $allInventories = @($newInventory)
+            }
+            elseif ($allInventories -isnot [System.Collections.IList]) {
+                $allInventories = @($allInventories)
+            }
+            else {
+                $allInventories = $allInventories + $newInventory
+            }
+            
+            # Actualizar ViewModel
+            Update-ServersInViewModel -ViewModel $viewModel -Inventories $allInventories
+            
+            Update-StatusBar -Message "Nuevo servidor '$serverName' agregado"
+            
+            [System.Windows.MessageBox]::Show(
+                "Servidor '$serverName' agregado correctamente.`n`nPuedes actualizar su información usando el botón 'Actualizar Seleccionado'.",
+                "Servidor agregado",
+                [System.Windows.MessageBoxButton]::OK,
+                [System.Windows.MessageBoxImage]::Information
+            )
+        }
+        catch {
+            $errorMsg = "Error al crear el servidor: $($_.Exception.Message)"
+            Update-StatusBar -Message $errorMsg -ShowTime:$false
+            
+            Write-Error $errorMsg
+            [System.Windows.MessageBox]::Show(
+                $errorMsg,
+                "Error",
+                [System.Windows.MessageBoxButton]::OK,
+                [System.Windows.MessageBoxImage]::Error
+            )
+        }
+    }
+    catch {
+        $errorMsg = "Error al crear el diálogo: $($_.Exception.Message)"
+        Write-Error $errorMsg
+        [System.Windows.MessageBox]::Show(
+            $errorMsg,
+            "Error",
+            [System.Windows.MessageBoxButton]::OK,
+            [System.Windows.MessageBoxImage]::Error
+        )
+    }
+}
+
 # === EVENTOS DE CONTROLES ===
 
 # Botón Refrescar
@@ -457,6 +625,13 @@ $controls['dgServers'].Add_MouseDoubleClick({
         Show-ServerDetails
     }
 })
+
+# Botón Agregar Nuevo Servidor
+if ($controls.ContainsKey('btnAddServer')) {
+    $controls['btnAddServer'].Add_Click({
+        Add-NewServer
+    })
+}
 
 # Evento al cerrar ventana
 $window.Add_Closing({

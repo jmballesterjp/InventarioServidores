@@ -66,6 +66,7 @@
             <RowDefinition Height="Auto"/>     <!-- Header -->
             <RowDefinition Height="Auto"/>     <!-- Toolbar -->
             <RowDefinition Height="*"/>        <!-- DataGrid -->
+            <RowDefinition Height="Auto"/>     <!-- Button Bar -->
             <RowDefinition Height="Auto"/>     <!-- StatusBar -->
         </Grid.RowDefinitions>
         
@@ -204,8 +205,16 @@
             </DataGrid.Columns>
         </DataGrid>
         
+        <!-- BUTTON BAR -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Name="btnAddServer" 
+                    Content="➕ Añadir nuevo servidor" 
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Margin="0,0,0,0"/>
+        </StackPanel>
+        
         <!-- STATUSBAR -->
-        <Border Grid.Row="3" 
+        <Border Grid.Row="4" 
                 Background="#EEEEEE" 
                 Padding="10"
                 Margin="0,15,0,0"
