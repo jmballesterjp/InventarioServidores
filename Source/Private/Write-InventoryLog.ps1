@@ -58,13 +58,13 @@ function Write-InventoryLog {
         # Error log separado
         if ($ErrorLog -and $ServerName) {
             $errorLogDir = Join-Path $script:LogPath "Errors"
-            $errorLog = Join-Path $errorLogDir "$ServerName`_$dateStamp.log"
+            $errorLogFile = Join-Path $errorLogDir "$ServerName`_$dateStamp.log"
             
             if (-not (Test-Path $errorLogDir)) {
                 [void][System.IO.Directory]::CreateDirectory($errorLogDir)
             }
             
-            [System.IO.File]::AppendAllText($errorLog, $logEntry, [System.Text.Encoding]::UTF8)
+            [System.IO.File]::AppendAllText($errorLogFile, $logEntry, [System.Text.Encoding]::UTF8)
         }
         
         # También escribir a verbose stream si está habilitado

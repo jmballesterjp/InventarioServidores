@@ -6,6 +6,9 @@
 [CmdletBinding()]
 param()
 
+# Add-Type -AssemblyName System.Windows.Forms
+# Solucion 1 (descartada por usar WPF>WinForms): Agregar referencia a Windows Forms para usar [System.Windows.Forms.Application]::DoEvents()
+
 Write-Host "🚀 Iniciando interfaz de Inventario de Servidores..." -ForegroundColor Cyan
 
 # === RUTAS ===
@@ -175,7 +178,9 @@ function Update-SelectedServer {
             $controls['btnUpdateSelected'].IsEnabled = $false
             
             # Forzar actualización de la UI
-            [System.Windows.Forms.Application]::DoEvents()
+            # [System.Windows.Forms.Application]::DoEvents()
+            # En lugar de la anterior, usar esta línea para procesar eventos pendientes y evitar que la UI se congele:
+            [System.Windows.Threading.Dispatcher]::CurrentDispatcher.Invoke([Action]{}, [System.Windows.Threading.DispatcherPriority]::ContextIdle)
             
             # Actualizar inventario (esto puede tardar)
             $newInventory = Update-ServerInventory -ServerName $serverName -Force -PassThru -ErrorAction Stop
