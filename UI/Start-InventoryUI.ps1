@@ -468,20 +468,31 @@ function Show-ServerDetails {
         }
 
         if ($detailControls.ContainsKey('tvJson')) {
-            $json = $null
-            try { $json = $inventory | ConvertTo-Json -Depth 100 }
-            catch { $json = $inventory.ToString() }
-
             $jsonHelpersPath = Join-Path $scriptPath "Helpers\JsonTreeHelpers.psm1"
             if (Test-Path $jsonHelpersPath) {
-                try { Import-Module $jsonHelpersPath -Force -ErrorAction Stop } catch { }
+                try {
+                    Import-Module $jsonHelpersPath -Force -ErrorAction Stop
+                }
+                catch {
+                    Write-Verbose "No se pudo importar JsonTreeHelpers: $($_.Exception.Message)"
+                }
             }
 
             try {
-                Populate-TreeViewFromJson -TreeView $detailControls['tvJson'] -JsonText $json
+                if (Get-Command -Name Populate-TreeViewFromObject -ErrorAction SilentlyContinue) {
+                    Populate-TreeViewFromObject -TreeView $detailControls['tvJson'] -Object $inventory
+                }
+                else {
+                    $json = $null
+                    try { $json = $inventory | ConvertTo-Json -Depth 10 }
+                    catch { $json = $inventory.ToString() }
+                    if ($json -and (Get-Command -Name Populate-TreeViewFromJson -ErrorAction SilentlyContinue)) {
+                        Populate-TreeViewFromJson -TreeView $detailControls['tvJson'] -JsonText $json
+                    }
+                }
             }
             catch {
-                # ignore populate errors
+                Write-Verbose "Error al popular TreeView: $($_.Exception.Message)"
             }
         }
 
