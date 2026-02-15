@@ -82,7 +82,8 @@ function Add-ObjectToTree {
         $node.Header = "$Name`: $val"
     }
 
-    $node.IsExpanded = $false
+    # Expandir el nodo root por defecto, el resto colapsados
+    $node.IsExpanded = ($Name -eq 'root')
     $Parent.Items.Add($node)
 }
 
