@@ -460,11 +460,84 @@ function Show-ServerDetails {
 
     try {
         $detailsWindow = Load-XamlWindow -XamlPath $detailsXaml
-        $detailControls = Get-AllXamlControls -Window $detailsWindow -ControlNames @('txtDetails','btnClose')
+        $detailControls = Get-AllXamlControls -Window $detailsWindow -ControlNames @('txtDetails','btnClose','tvJson','btnExpandAll','btnCollapseAll')
 
         $detailText = Format-InventoryAsText -Inventory $inventory
         if ($detailControls.ContainsKey('txtDetails')) {
             $detailControls['txtDetails'].Text = $detailText
+        }
+
+        if ($detailControls.ContainsKey('tvJson')) {
+            $jsonHelpersPath = Join-Path $scriptPath "Helpers\JsonTreeHelpers.psm1"
+            if (Test-Path $jsonHelpersPath) {
+                try {
+                    Import-Module $jsonHelpersPath -Force -ErrorAction Stop
+                }
+                catch {
+                    Write-Verbose "No se pudo importar JsonTreeHelpers: $($_.Exception.Message)"
+                }
+            }
+
+            try {
+                if (Get-Command -Name Populate-TreeViewFromObject -ErrorAction SilentlyContinue) {
+                    Populate-TreeViewFromObject -TreeView $detailControls['tvJson'] -Object $inventory
+                }
+                else {
+                    $json = $null
+                    try { $json = $inventory | ConvertTo-Json -Depth 10 }
+                    catch { $json = $inventory.ToString() }
+                    if ($json -and (Get-Command -Name Populate-TreeViewFromJson -ErrorAction SilentlyContinue)) {
+                        Populate-TreeViewFromJson -TreeView $detailControls['tvJson'] -JsonText $json
+                    }
+                }
+            }
+            catch {
+                Write-Verbose "Error al popular TreeView: $($_.Exception.Message)"
+            }
+        }
+
+        if ($detailControls.ContainsKey('btnExpandAll')) {
+            $detailControls['btnExpandAll'].Add_Click({
+                try {
+                    if (-not $detailControls.ContainsKey('tvJson')) { return }
+                    $tv = $detailControls['tvJson']
+                    if ($null -eq $tv) { return }
+
+                    function _SetRecExpansion([System.Windows.Controls.ItemsControl]$parent, [bool]$expanded) {
+                        foreach ($item in $parent.Items) {
+                            if ($item -is [System.Windows.Controls.TreeViewItem]) {
+                                $item.IsExpanded = $expanded
+                                if ($item.Items.Count -gt 0) { _SetRecExpansion $item $expanded }
+                            }
+                        }
+                    }
+
+                    _SetRecExpansion $tv $true
+                }
+                catch { }
+            })
+        }
+
+        if ($detailControls.ContainsKey('btnCollapseAll')) {
+            $detailControls['btnCollapseAll'].Add_Click({
+                try {
+                    if (-not $detailControls.ContainsKey('tvJson')) { return }
+                    $tv = $detailControls['tvJson']
+                    if ($null -eq $tv) { return }
+
+                    function _SetRecExpansion([System.Windows.Controls.ItemsControl]$parent, [bool]$expanded) {
+                        foreach ($item in $parent.Items) {
+                            if ($item -is [System.Windows.Controls.TreeViewItem]) {
+                                $item.IsExpanded = $expanded
+                                if ($item.Items.Count -gt 0) { _SetRecExpansion $item $expanded }
+                            }
+                        }
+                    }
+
+                    _SetRecExpansion $tv $false
+                }
+                catch { }
+            })
         }
 
         if ($detailControls.ContainsKey('btnClose')) {

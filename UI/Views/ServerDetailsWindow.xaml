@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Detalles del servidor" 
         Height="600" 
-        Width="800"
+        Width="900"
         WindowStartupLocation="CenterOwner"
         Background="#FFFFFF">
     <Grid Margin="10">
@@ -15,17 +15,43 @@
 
         <TextBlock Grid.Row="0" Text="Ficha del servidor" FontSize="16" FontWeight="Bold" Margin="0,0,0,8"/>
 
-        <TextBox Grid.Row="1" Name="txtDetails"
-                 FontFamily="Consolas"
-                 FontSize="12"
-                 IsReadOnly="True"
-                 TextWrapping="Wrap"
-                 VerticalScrollBarVisibility="Auto"
-                 HorizontalScrollBarVisibility="Auto"
-                 AcceptsReturn="True"
-                 Padding="8"
-                 Background="#FAFAFA"
-                 />
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="120"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left buttons for TreeView control -->
+            <StackPanel Grid.Column="0" Orientation="Vertical" HorizontalAlignment="Left" Margin="0,0,8,0">
+                <Button Name="btnExpandAll" Content="Expandir todo" Width="110" Height="34" Margin="0,0,0,8"/>
+                <Button Name="btnCollapseAll" Content="Contraer todo" Width="110" Height="34"/>
+            </StackPanel>
+
+            <!-- Main content: TreeView + Raw JSON -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="200"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4">
+                    <TreeView Name="tvJson" Margin="4"/>
+                </Border>
+
+                <TextBox Grid.Row="1" Name="txtDetails"
+                         FontFamily="Consolas"
+                         FontSize="12"
+                         IsReadOnly="True"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         AcceptsReturn="True"
+                         Padding="8"
+                         Background="#FAFAFA"
+                         Margin="0,8,0,0"
+                         />
+            </Grid>
+        </Grid>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
             <Button Name="btnClose" Content="Cerrar" Width="90" Height="30"/>
