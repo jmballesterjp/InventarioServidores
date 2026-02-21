@@ -40,7 +40,7 @@ catch {
 }
 
 # === CARGAR HELPERS Y VIEWMODEL ===
-Import-Module -Force $helpersPath
+Import-Module -Force $helpersPath -DisableNameChecking # Disable Warnings por funciones sin verbos aprobados (Load-*), pero es un módulo de helpers
 Import-Module -Force $viewModelPath
 
 # === CARGAR VENTANA XAML ===
@@ -115,7 +115,7 @@ function Load-Inventories {
         if ($inventories.Count -eq 0) {
             Update-StatusBar -Message "No hay inventarios disponibles. Usa Update-ServerInventory para crear uno."
             [System.Windows.MessageBox]::Show(
-                "No se encontraron inventarios.`n`nEjecuta Update-ServerInventory desde PowerShell para crear inventarios.",
+                "No se encontraron inventarios.`n`nEjecuta Update-ServerInventory desde PowerShell para crear inventarios.`n`nO mediante el botón 'Inventariar Seleccionado' después de agregar un servidor.",
                 "Sin inventarios",
                 [System.Windows.MessageBoxButton]::OK,
                 [System.Windows.MessageBoxImage]::Information
@@ -144,7 +144,7 @@ function Load-Inventories {
     }
 }
 
-# === FUNCIÓN: ACTUALIZAR SERVIDOR SELECCIONADO ===
+# === FUNCIÓN: ACTUALIZAR/INVENTARIAR SERVIDOR SELECCIONADO ===
 function Update-SelectedServer {
     [CmdletBinding()]
     param()
@@ -164,14 +164,14 @@ function Update-SelectedServer {
     $serverName = $selectedItem.ServerName
     
     $result = [System.Windows.MessageBox]::Show(
-        "¿Actualizar el inventario de '$serverName'?`n`nEsto puede tardar unos segundos.",
-        "Confirmar actualización",
+        "¿Inventariar '$serverName'?`n`nEsto puede tardar unos segundos.",
+        "Confirmar inventario",
         [System.Windows.MessageBoxButton]::YesNo,
         [System.Windows.MessageBoxImage]::Question
     )
-    
+
     if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
-        Update-StatusBar -Message "Actualizando $serverName..." -ShowTime:$false
+        Update-StatusBar -Message "Inventariando $serverName..." -ShowTime:$false
         
         try {
             # Deshabilitar botón mientras actualiza
@@ -190,8 +190,8 @@ function Update-SelectedServer {
                 Load-Inventories
                 
                 [System.Windows.MessageBox]::Show(
-                    "Inventario de '$serverName' actualizado correctamente.`n`nEstado: $($newInventory.Status.Result)",
-                    "Actualización exitosa",
+                    "Inventario de '$serverName' completado correctamente.`n`nEstado: $($newInventory.Status.Result)",
+                    "Inventario exitoso",
                     [System.Windows.MessageBoxButton]::OK,
                     [System.Windows.MessageBoxImage]::Information
                 )
@@ -214,7 +214,7 @@ function Update-SelectedServer {
     }
 }
 
-# === FUNCIÓN: ACTUALIZAR TODOS LOS SERVIDORES ===
+# === FUNCIÓN: ACTUALIZAR/INVENTARIAR TODOS LOS SERVIDORES ===
 function Update-AllServers {
     [CmdletBinding()]
     param()
@@ -230,14 +230,14 @@ function Update-AllServers {
     }
     
     $result = [System.Windows.MessageBox]::Show(
-        "¿Actualizar el inventario de TODOS los servidores ($($viewModel.Servers.Count))?`n`nEsto puede tardar varios minutos.",
-        "Confirmar actualización masiva",
+        "¿Inventariar TODOS los servidores ($($viewModel.Servers.Count))?`n`nEsto puede tardar varios minutos.",
+        "Confirmar inventario masivo",
         [System.Windows.MessageBoxButton]::YesNo,
         [System.Windows.MessageBoxImage]::Warning
     )
-    
+
     if ($result -eq [System.Windows.MessageBoxResult]::Yes) {
-        Update-StatusBar -Message "Iniciando actualización masiva..." -ShowTime:$false
+        Update-StatusBar -Message "Iniciando inventario masivo..." -ShowTime:$false
         
         try {
             # Deshabilitar botones
@@ -256,7 +256,7 @@ function Update-AllServers {
             
             # Mostrar resumen
             $message = @"
-Actualización masiva completada.
+Inventario masivo completado.
 
 Total: $($summary.TotalServers) servidores
 Exitosos: $($summary.Successful)
@@ -264,10 +264,10 @@ Fallidos: $($summary.Failed)
 Tasa de éxito: $($summary.SuccessRate)%
 Duración: $($summary.Duration.ToString('mm\:ss'))
 "@
-            
+
             [System.Windows.MessageBox]::Show(
                 $message,
-                "Actualización completada",
+                "Inventario completado",
                 [System.Windows.MessageBoxButton]::OK,
                 [System.Windows.MessageBoxImage]::Information
             )
@@ -687,7 +687,7 @@ function Add-NewServer {
             Update-StatusBar -Message "Nuevo servidor '$serverName' agregado"
 
             [System.Windows.MessageBox]::Show(
-                "Servidor '$serverName' agregado correctamente.`n`nEstado: Pendiente de inventariar`n`nPuedes actualizar su información usando el botón 'Actualizar Seleccionado'.",
+                "Servidor '$serverName' agregado correctamente.`n`nEstado: Pendiente de inventariar`n`nPuedes actualizar su información usando el botón 'Inventariar Seleccionado'.",
                 "Servidor agregado",
                 [System.Windows.MessageBoxButton]::OK,
                 [System.Windows.MessageBoxImage]::Information
@@ -725,12 +725,12 @@ $controls['btnRefresh'].Add_Click({
     Load-Inventories
 })
 
-# Botón Actualizar Seleccionado
+# Botón Actualizar/Inventariar Seleccionado
 $controls['btnUpdateSelected'].Add_Click({
     Update-SelectedServer
 })
 
-# Botón Actualizar Todos
+# Botón Actualizar/Inventariar Todos
 $controls['btnUpdateAll'].Add_Click({
     Update-AllServers
 })
