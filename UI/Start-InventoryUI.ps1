@@ -79,6 +79,22 @@ if ($missingControls.Count -gt 0) {
     Write-Warning "No se encontraron los siguientes controles: $($missingControls -join ', ')"
 }
 
+# === LEER CONFIGURACIÓN ===
+$settingsPath = Join-Path $moduleRoot "Config\Settings.psd1"
+$script:StaleThresholdDays = 7  # valor por defecto
+if (Test-Path $settingsPath) {
+    try {
+        $settings = Import-PowerShellDataFile $settingsPath
+        if ($settings.ContainsKey('StaleThresholdDays')) {
+            $script:StaleThresholdDays = [int]$settings.StaleThresholdDays
+        }
+    }
+    catch {
+        Write-Warning "No se pudo leer la configuración: $_. Usando umbral Stale por defecto ($($script:StaleThresholdDays) días)."
+    }
+}
+Write-Verbose "Umbral de inventario anticuado (Stale): $($script:StaleThresholdDays) días"
+
 # === CREAR VIEWMODEL ===
 $viewModel = New-MainViewModel
 Write-Verbose "ViewModel creado"
@@ -124,8 +140,8 @@ function Load-Inventories {
         }
         
         # Actualizar ViewModel
-        Update-ServersInViewModel -ViewModel $viewModel -Inventories $inventories
-        
+        Update-ServersInViewModel -ViewModel $viewModel -Inventories $inventories -StaleThresholdDays $script:StaleThresholdDays
+
         Update-StatusBar -Message "Inventarios cargados correctamente"
         
         Write-Host "✓ Cargados $($inventories.Count) servidores" -ForegroundColor Green
@@ -321,7 +337,7 @@ function Search-Servers {
             $viewModel.Servers.Clear()
         }
         else {
-            Update-ServersInViewModel -ViewModel $viewModel -Inventories $filtered
+            Update-ServersInViewModel -ViewModel $viewModel -Inventories $filtered -StaleThresholdDays $script:StaleThresholdDays
             Update-StatusBar -Message "Encontrados $($filtered.Count) resultados para '$searchText'"
         }
     }
