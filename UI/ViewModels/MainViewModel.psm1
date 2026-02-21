@@ -55,8 +55,9 @@ class ServerViewModel {
         $this.LastInventoryFormatted = $inventory.LastInventory.ToString('yyyy-MM-dd HH:mm')
         
         # Estado (Stale sobreescribe el estado si el inventario está anticuado)
+        # Si StaleThresholdDays = 0, la detección de Stale está desactivada
         $statusResult = $inventory.Status.Result.ToString()
-        if ($statusResult -ne 'NotStarted' -and $inventory.IsStale($this._staleThresholdDays)) {
+        if ($this._staleThresholdDays -gt 0 -and $statusResult -ne 'NotStarted' -and $inventory.IsStale($this._staleThresholdDays)) {
             $this.StatusText  = 'Stale'
             $this.StatusColor = '#FFC107'
         }
