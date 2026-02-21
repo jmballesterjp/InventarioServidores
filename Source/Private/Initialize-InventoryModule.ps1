@@ -58,6 +58,7 @@ function Initialize-InventoryModule {
     # Colección
     DefaultThrottleLimit = 10
     CommandTimeout = 300  # segundos
+    StaleThresholdDays = 7  # Días sin actualizar para considerar un inventario como anticuado (Stale)
     
     # Exports
     AlsoExportJSON = `$true
