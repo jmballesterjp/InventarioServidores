@@ -204,13 +204,34 @@ function Update-SelectedServer {
             if ($null -ne $newInventory) {
                 # Recargar todos los inventarios para reflejar cambios
                 Load-Inventories
-                
-                [System.Windows.MessageBox]::Show(
-                    "Inventario de '$serverName' completado correctamente.`n`nEstado: $($newInventory.Status.Result)",
-                    "Inventario exitoso",
-                    [System.Windows.MessageBoxButton]::OK,
-                    [System.Windows.MessageBoxImage]::Information
-                )
+
+                $statusResult = $newInventory.Status.Result.ToString()
+                switch ($statusResult) {
+                    'Success' {
+                        [System.Windows.MessageBox]::Show(
+                            "Inventario de '$serverName' completado correctamente.`n`nEstado: $statusResult",
+                            "Inventario exitoso",
+                            [System.Windows.MessageBoxButton]::OK,
+                            [System.Windows.MessageBoxImage]::Information
+                        )
+                    }
+                    'Partial' {
+                        [System.Windows.MessageBox]::Show(
+                            "Inventario de '$serverName' completado con advertencias.`n`nEstado: $statusResult`n`n$($newInventory.Status.Message)",
+                            "Inventario parcial",
+                            [System.Windows.MessageBoxButton]::OK,
+                            [System.Windows.MessageBoxImage]::Warning
+                        )
+                    }
+                    default {
+                        [System.Windows.MessageBox]::Show(
+                            "El inventario de '$serverName' finalizó con errores.`n`nEstado: $statusResult`n`n$($newInventory.Status.Message)",
+                            "Inventario fallido",
+                            [System.Windows.MessageBoxButton]::OK,
+                            [System.Windows.MessageBoxImage]::Error
+                        )
+                    }
+                }
             }
         }
         catch {

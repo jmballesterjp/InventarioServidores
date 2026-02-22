@@ -116,7 +116,7 @@ function Export-ServerInventory {
                 }
             }
             catch {
-                Write-Warning "Error al exportar inventario, en formato JSON: $_"
+                Write-Warning "Error al exportar inventario, del servidor '$($Inventory.ServerName)', en formato JSON: $_"
                 Write-InventoryLog -Message "Error al exportar inventario, en formato JSON: $_" -ServerName $Inventory.ServerName -Level Error -ErrorLog
             }
             
