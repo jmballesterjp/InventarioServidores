@@ -10,30 +10,12 @@ $script:LogPath = Join-Path $ModuleRoot "Logs"
 $script:TempPath = Join-Path $ModuleRoot "Temp"
 $script:ConfigPath = Join-Path $ModuleRoot "Config"
 
-# === Cargar Clases (ORDEN IMPORTANTE: dependencias primero) ===
-# Dot-source en el scope del módulo para que 'using module' las exporte correctamente.
-# ScriptsToProcess en el .psd1 carga en el scope del llamante y no funciona con 'using module'.
-$classFiles = @(
-    'CollectionStatus.ps1'  # enum CollectionResult + class CollectionStatus
-    'OSInfo.ps1'
-    'HardwareInfo.ps1'      # class HardwareInfo + class DiskInfo
-    'NetworkInfo.ps1'
-    'IISInfo.ps1'
-    'ServerInventory.ps1'   # depende de todas las anteriores
-)
-
-foreach ($classFile in $classFiles) {
-    $classPath = Join-Path $ModuleRoot "Source\Classes\$classFile"
-    if (Test-Path $classPath) {
-        # . $classPath # No es suficiente con esto, hay que invocar el contenido
-        $classContent = Get-ChildItem "$classPath" | Get-Content -Raw
-        Invoke-Expression $classContent
-        Write-Verbose "Clase cargada: $classFile"
-    }
-    else {
-        Write-Warning "No se encontró clase: $classFile"
-    }
-}
+# === Clases ===
+# Las clases se cargan vía ScriptsToProcess en el .psd1, en el scope global del llamante.
+# NO se redefinen aquí: redefinirlas con Invoke-Expression crea un segundo tipo con distinto
+# contexto (.NET TypeHandle), causando el error "cannot convert ServerInventory to ServerInventory"
+# cuando el UI crea instancias directamente con [ServerInventory]::new() y las pasa a funciones
+# del módulo que esperan el tipo definido aquí.
 
 # === Cargar Funciones Private ===
 $privateFunctions = Get-ChildItem -Path (Join-Path $ModuleRoot "Source\Private\*.ps1") -ErrorAction SilentlyContinue

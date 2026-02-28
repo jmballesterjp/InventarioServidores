@@ -16,10 +16,11 @@
     # Módulo root
     RootModule = 'InventarioServidores.psm1'
     
-    # Clases cargadas mediante dot-source en InventarioServidores.psm1 (scope del módulo).
-    # Esto permite que 'using module' las exporte correctamente a scripts externos.
-    # No es lo ideal, pero sí es funcional cargarlas de ambas maneras, por el uso de clases.
-    
+    # Clases cargadas en el scope global del llamante antes de que se importe el módulo.
+    # IMPORTANTE: NO redefinir estas clases dentro del .psm1 con Invoke-Expression ni dot-source,
+    # ya que eso crea un segundo TypeHandle distinto y provoca errores de conversión de tipo
+    # al pasar objetos entre el scope del módulo y el scope del llamante.
+
     ScriptsToProcess = @(
         'Source/Classes/CollectionStatus.ps1'
         'Source/Classes/OSInfo.ps1'
