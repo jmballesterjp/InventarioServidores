@@ -4,9 +4,9 @@
 @{
     # Metadata del módulo
     ModuleVersion = '1.0.0'
-    GUID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'  # Genera uno nuevo con [guid]::NewGuid()
-    Author = 'Tu Nombre'
-    CompanyName = 'Tu Empresa'
+    GUID = '8604581f-d533-4b0a-a11b-0a60b6227b13'  # Genera uno nuevo con [guid]::NewGuid()
+    Author = 'Jose Miguel Ballester'
+    CompanyName = 'Big School - Master Desarrollo con IA'
     Copyright = '(c) 2026. Todos los derechos reservados.'
     Description = 'Sistema de inventario automatizado para servidores Windows con soporte para recopilación remota, versionado de schema y exportación a múltiples formatos.'
     
