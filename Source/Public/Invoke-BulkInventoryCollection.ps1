@@ -68,6 +68,11 @@ function Invoke-BulkInventoryCollection {
         
         $startTime = Get-Date
         
+        # Ruta al manifest .psd1 (no al .psm1 que devuelve .Path).
+        # Import-Module con el .psd1 garantiza que las clases se cargan correctamente
+        # en el runspace del job antes de que se parseen los archivos de funciones.
+        $moduleManifestPath = Join-Path (Get-Module 'InventarioServidores').ModuleBase 'InventarioServidores.psd1'
+
         foreach ($server in $allServers) {
             # Control de concurrencia
             while ((Get-Job -State Running | Where-Object Name -like "Inventory_*").Count -ge $ThrottleLimit) {
@@ -108,14 +113,15 @@ function Invoke-BulkInventoryCollection {
                                -PercentComplete (($completed / $total) * 100)
             }
             
-            # Lanzar nuevo job
+            # Lanzar nuevo job. Las clases están en el scope del módulo (.psm1),
+            # así que Import-Module del .psd1 las carga correctamente en el runspace del job.
             $job = Start-Job -Name "Inventory_$server" -ScriptBlock { 
                 #TODO: Refactorizar para evitar duplicación de lógica con Update-ServerInventory (sugerencia)
                 # cambiar parametro credential a psCredential nativo y reconstruir dentro del job para evitar problemas de serialización
-                param($srv, $modulePath, $credentialXml, $forceUpdate)
+                param($srv, $manifestPath, $credentialXml, $forceUpdate)
                 
                 # Importar módulo en el runspace del job
-                Import-Module $modulePath -Force
+                Import-Module $manifestPath
                 
                 try {
                     $params = @{
@@ -144,7 +150,7 @@ function Invoke-BulkInventoryCollection {
                         Error = $_.Exception.Message
                     }
                 }
-            } -ArgumentList $server, $PSScriptRoot, $Credential, $Force.IsPresent
+            } -ArgumentList $server, $moduleManifestPath, $Credential, $Force.IsPresent
             
             $jobs += $job
         }
